@@ -5,6 +5,8 @@ NUMBER_OF_DECKS = 5
 SUITS = ['H','D','C','S']
 CARDS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']
 CARD_VALUES = {'2' => 2, '3' => 3, '4' => 4, '5' => 5, '6' => 6, '7' => 7, '8' => 8, '9' => 9, '10' => 10, 'J' => 10, 'Q' => 10, 'K' => 10, 'A' =>11}
+BLACKJACK = 21
+DEALER_MIN = 16
 
 def shuffle_cards
   prepare_cards = []
@@ -36,9 +38,9 @@ end
 def check_winner(player_cards, dealer_cards)
   player_sum = calculate_score(player_cards)
   dealer_sum = calculate_score(dealer_cards)
-  if player_sum <= 21 && (dealer_sum < player_sum || dealer_sum > 21)
+  if player_sum <= BLACKJACK && (dealer_sum < player_sum || dealer_sum > BLACKJACK)
     'Player'
-  elsif dealer_sum <= 21 && (player_sum < dealer_sum || player_sum > 21)
+  elsif dealer_sum <= BLACKJACK && (player_sum < dealer_sum || player_sum > BLACKJACK)
     'Dealer'
   else
     'Tie'
@@ -53,9 +55,9 @@ def draw_game_board(player_hand,dealer_hand)
 end
 
 def announce_winner(player_score, dealer_score)
-  if dealer_score <= 21 && (dealer_score > player_score || player_score > 21)
+  if dealer_score <= BLACKJACK && (dealer_score > player_score || player_score > BLACKJACK)
     puts "Dealer Wins"
-  elsif player_score <= 21 && (player_score > dealer_score || dealer_score > 21)
+  elsif player_score <= BLACKJACK && (player_score > dealer_score || dealer_score > BLACKJACK)
     puts "#{PLAYER_NAME} Wins!"
   else
     puts "It's a tie"
@@ -98,7 +100,7 @@ begin
 
 
   # Player gets a blackjack with first two cards. Check if dealer also has Blackjack
-  if player_score == 21 
+  if player_score == BLACKJACK 
     puts "#{PLAYER_NAME} got Blackjack. Showing dealer cards"
     dealer_cards.concat(hold_card)
     dealer_score = calculate_score(dealer_cards)
@@ -107,15 +109,16 @@ begin
     game_over = true
   end
   
-  if !game_over
+  unless game_over
 
-    while player_score <= 21 && !player_busted
+    while player_score <= BLACKJACK && !player_busted
       puts "#{PLAYER_NAME}: Do you want to (H) - Hit or (S) - Stay?"
       player_action = gets.chomp.downcase
 
       loop do
-        break if ['h','s'].include?(player_action)
+        break if %w(h s).include?(player_action)
         puts "Please choose: H for Hit, S for Stay"
+        player_action = gets.chomp.downcase
       end
       
       break if player_action == 's'
@@ -124,7 +127,7 @@ begin
       draw_game_board(player_cards,dealer_cards)
       player_score = calculate_score(player_cards)
       # 
-      player_busted = true if player_score > 21
+      player_busted = true if player_score > BLACKJACK
 
     end
 
@@ -134,15 +137,13 @@ begin
     dealer_cards.concat(hold_card)
     draw_game_board(player_cards,dealer_cards)
     dealer_score = calculate_score(dealer_cards)
-    # if dealer gets blackjack with first two cards
-    # OR if player is busted dealer won't continue to draw cards even if the cards sum is less than 17
-    if dealer_score == 21 || player_busted
+    if dealer_score == BLACKJACK || player_busted
       puts "Dealer wins!"
       game_over = true
     end
   
     # Dealer draws until gets at least 17
-    while dealer_score <= 16 && !game_over
+    while dealer_score <= DEALER_MIN && !game_over
       puts "Dealer draws additional card!"
       dealer_cards << game_cards.pop
       draw_game_board(player_cards,dealer_cards)
@@ -151,10 +152,8 @@ begin
 
   end
 
-  # Announce winner
   announce_winner(player_score, dealer_score) if !game_over
 
-  # Play again
   loop do 
     puts "Do you want to play again? Y - yes, N - no"
     exit_game = gets.chomp.downcase
